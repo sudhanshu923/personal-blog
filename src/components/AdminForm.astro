@@ -1,0 +1,156 @@
+---
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+---
+
+<div class="admin-form">
+  <h2>Add New Blog Post</h2>
+  <form id="blogForm" class="space-y-4">
+    <div class="form-group">
+      <label for="title">Title:</label>
+      <input type="text" id="title" name="title" required class="form-input" />
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description:</label>
+      <input type="text" id="description" name="description" required class="form-input" />
+    </div>
+
+    <div class="form-group">
+      <label for="content">Content (Markdown):</label>
+      <textarea id="content" name="content" rows="10" required class="form-textarea"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="heroImage">Hero Image URL:</label>
+      <input type="text" id="heroImage" name="heroImage" value="/blog-placeholder-1.jpg" class="form-input" />
+    </div>
+
+    <button type="submit" class="submit-button">Add Post</button>
+  </form>
+
+  <div class="existing-posts">
+    <h3>Existing Posts</h3>
+    <ul>
+      {posts.map((post) => (
+        <li>
+          <span>{post.data.title}</span>
+          <span class="post-date">{post.data.pubDate.toLocaleDateString()}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</div>
+
+<style>
+  .admin-form {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: rgb(var(--gray-dark));
+    font-weight: 600;
+  }
+
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid rgb(var(--gray-light));
+    border-radius: 4px;
+    font-size: 1rem;
+    background: white;
+  }
+
+  .form-textarea {
+    min-height: 200px;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  .submit-button {
+    background-color: var(--accent);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .submit-button:hover {
+    background-color: var(--accent-dark);
+  }
+
+  .existing-posts {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgb(var(--gray-light));
+  }
+
+  .existing-posts h3 {
+    margin-bottom: 1rem;
+  }
+
+  .existing-posts ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .existing-posts li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgb(var(--gray-light));
+  }
+
+  .post-date {
+    color: rgb(var(--gray));
+    font-size: 0.9rem;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('blogForm') as HTMLFormElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    const data = {
+      title: formData.get('title'),
+      description: formData.get('description'),
+      content: formData.get('content'),
+      heroImage: formData.get('heroImage'),
+      pubDate: new Date().toISOString(),
+    };
+
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        alert('Post created successfully!');
+        form.reset();
+      } else {
+        throw new Error('Failed to create post');
+      }
+    } catch (error) {
+      alert('Error creating post: ' + error.message);
+    }
+  });
+</script>
